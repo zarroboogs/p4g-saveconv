@@ -16,7 +16,7 @@ A utility that converts P4G PS Vita saves to P4G PC saves:
 
 ## Requirements
 
-- PS Vita with HENkaku + _VitaShell_ or _vita-savemgr_
+- PS Vita with HENkaku + VitaShell or vita-savemgr
 - Persona 4 Golden on PS Vita
 - Persona 4 Golden on PC
 - Python 3
@@ -25,7 +25,7 @@ A utility that converts P4G PS Vita saves to P4G PC saves:
 
 ### Dumping Saves
 
-Use _VitaShell_ or _vita-savemgr_ to export a save. Transfer the exported save directory to PC using FTP/USB.
+Use VitaShell or vita-savemgr to export a save. Transfer the exported save directory to PC using FTP/USB.
 
 For example, using VitaShell:
 
