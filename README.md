@@ -63,7 +63,7 @@ Copy the converted saves in `<save_dir>_conv` to `%PROGRAMFILES(X86)%/Steam/user
 
 1. Why do I need to convert the saves? PS Vita saves seem to work fine without conversion.
 
-    - The PC save format is slightly different (see [Save Format Changes](#save-format-changes). If you load a PS Vita save directly without conversion, you might get the following error:
+    - The PC save format is slightly different (see [Save Format Changes](#save-format-changes)). If you load a PS Vita save directly without conversion, you might get the following error:
 
         ![retry point error](img/retry_point.png)
 
@@ -71,7 +71,7 @@ Copy the converted saves in `<save_dir>_conv` to `%PROGRAMFILES(X86)%/Steam/user
 
 2. Why do I need to include `sdslot.dat`?
 
-    - PS Vita saves store metadata in the `sdslot.dat` file, which can be found in `ux0:user/00/savedata/PCSE00120/sce_sys/`. PC saves store metadata in `binslot` files. This converter takes data found in `sdslot.dat` and converts it to the PC `binslot` format (see [Save Format Changes](#save-format-changes).
+    - PS Vita saves store metadata in the `sdslot.dat` file, which can be found in `ux0:user/00/savedata/PCSE00120/sce_sys/`. PC saves store metadata in `binslot` files. This converter takes data found in `sdslot.dat` and converts it to the PC `binslot` format (see [Save Format Changes](#save-format-changes)).
 
 3. Why can't I see some of my saves in the save select screen? Why am I getting a "Load failed." message when trying to load a save?
 
@@ -124,6 +124,8 @@ BINslot Slot;
 
 Why append `P4GOLDEN` to the end of `SlotData` for md5sum calc?
 
-Because ATLUS _loves_ to complicate things.
+Because ATLUS.
+
+That's why.
 
 `(ノಠ益ಠ)ノ彡┻━┻`
