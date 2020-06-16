@@ -77,8 +77,14 @@ def conv_binslot( sdslot, offset, target_path, bin_path ):
         binslot.seek( 0x18, 0 )
         binslot.write( bin_md5sum.digest() )
 
-        # slot data
-        binslot.write( sdslot.read( 0x34C ) )
+        binslot.write( sdslot.read( 0xC4 ) )
+
+        # slot data + lang
+        contents = sdslot.read( 0xC4 )
+        contents = contents.replace( b"\nTimes ", b"\nLANG1\nTimes " )
+        binslot.write( contents[:-6] )
+
+        binslot.write( sdslot.read( 0x34C - 2 * 0xC4 ) )
 
         # slot data md5sum
         # md5sum of bytes 0x28 to EOF
