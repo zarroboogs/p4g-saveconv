@@ -1,7 +1,7 @@
 
 # Persona 4 Golden Save Converter
 
-A utility that converts P4G PS Vita saves to P4G PC saves:
+`convert_vita2pc.py` is a utility that converts P4G PS Vita saves to P4G PC saves:
 
 - PS Vita `data00XX.bin` and `system.bin` files are converted to the PC format (see [FAQ](#faq) #1).
 - PS Vita `sdslot.dat` file is converted to PC `data00XX.binslot` files (see [FAQ](#faq) #2).
@@ -10,9 +10,13 @@ A utility that converts P4G PS Vita saves to P4G PC saves:
 
 **_There's no need to edit any hashes manually._**
 
-| PS Vita                          | PC                             |
-| :------------------------------: | :----------------------------: |
-| ![preview](img/preview_vita.png) | ![preview](img/preview_pc.png) |
+`convert_pc2vita.py` is a utility that converts P4G PC saves to P4G PS Vita saves by reversing the actions described above.
+
+**WARNING: REMEMBER TO BACKUP YOUR SAVES BEFORE USING THIS TOOL.**
+
+| PS Vita                       | PC                        |
+| :---------------------------: | :-----------------------: |
+| ![vita](img/preview_vita.png) | ![pc](img/preview_pc.png) |
 
 ## Requirements
 
@@ -23,7 +27,9 @@ A utility that converts P4G PS Vita saves to P4G PC saves:
 
 ## Usage
 
-### Dumping Saves
+### PS Vita Saves to PC Saves
+
+#### Dumping Saves from PS Vita
 
 Use VitaShell or vita-savemgr to export a save. Transfer the exported save directory to PC using FTP/USB.
 
@@ -49,15 +55,33 @@ PCSE00120/
 
 Note that the `sce_sys` directory contains other files, but they are not relevant to the conversion process.
 
-### Converting Saves
+#### Converting Saves to PC Format
 
-Clone this repository, then run:
+Clone this repository, then:
 
 ```sh
-python convert.py <save_dir>
+python convert_vita2pc.py <save_dir>
 ```
 
 Copy the converted saves in `<save_dir>_conv` to `%PROGRAMFILES(X86)%/Steam/userdata/<user_id>/1113000/remote/` and launch the game.
+
+### PC Saves to PS Vita
+
+#### Converting Saves to PS Vita Format
+
+Copy the saves in `%PROGRAMFILES(X86)%/Steam/userdata/<user_id>/1113000/remote/` to another location as a precaution.
+
+Then run the following on the directory you've copied:
+
+```sh
+python convert_pc2vita.py <save_dir>
+```
+
+#### Moving Converted Saves to PS Vita
+
+Copy the converted saves in `<save_dir>_conv` to `ux0:user/00/savedata/PCSE00120/` using VitaShell FTP/USB. Overwrite files as needed (_remember to backup the saves already on PS Vita too_). You should only need to overwrite `data00XX.bin`, `system.bin` and the `sce_sys/sdslot.dat` file.
+
+**Do not replace the entire save directory on PS Vita**. Only overwrite the `.bin` files within the save directory (as needed) + `sce_sys/sdslot.dat`.
 
 ## FAQ
 
@@ -83,6 +107,12 @@ Copy the converted saves in `<save_dir>_conv` to `%PROGRAMFILES(X86)%/Steam/user
 
     - This is (_probably_) caused due to a bug in the game itself. Note that the saves work as they should, the only issue is with how the save metadata is displayed. Wait for a patch.
 
+        Also note that when converting a Clear Data (save 13 below) or NG+ save (save 14 below) _generated on PC_ to PS Vita format, the save metadata is read correctly by the PS Vita version of the game:
+
+        | PC                      | PS Vita                     |
+        | :---------------------: | :-------------------------: |
+        | ![pc](img/clear_pc.png) | ![vita](img/clear_vita.png) |
+
 ## Save Format Changes
 
 ### Config Settings
@@ -93,7 +123,7 @@ Config settings are no longer saved in `system.bin`, instead there's a config `P
 
 - The *Rescue Requests* save segment increased in size (due to internal struct changes), from `0x2908` bytes (PS Vita) to `0x3FAC` bytes (PC).
 - PC saves contain a new save segment (`0x30` bytes) that contains the Hero's name.
-- PS Vita saves are padded to `0x38000` bytes with garbage data from Vita memory. PC saves aren't padded (`0x34D3D` bytes).
+- PS Vita saves are padded to `0x38000` bytes with garbage data from PS Vita memory. PC saves aren't padded (`0x34D3D` bytes).
 
 ### `.binslot` Files
 
