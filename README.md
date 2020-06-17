@@ -1,18 +1,20 @@
 
 # Persona 4 Golden Save Converter
 
-`convert_vita2pc.py` is a utility that converts P4G PS Vita saves to P4G PC saves:
+This repo contains:
 
-- PS Vita `data00XX.bin` and `system.bin` files are converted to the PC format (see [FAQ](#faq) #1).
-- PS Vita `sdslot.dat` file is converted to PC `data00XX.binslot` files (see [FAQ](#faq) #2).
+- `convert_vita2pc.py`, a utility that converts P4G PS Vita saves to P4G PC saves:
 
-**This tool will convert the above into proper PC `.bin`/`.binslot` files.**
+  - PS Vita `data00XX.bin` and `system.bin` files are converted to the PC format (see [FAQ](#faq) #1).
+  - PS Vita `sdslot.dat` file is converted to PC `data00XX.binslot` files (see [FAQ](#faq) #2).
 
-**_There's no need to edit any hashes manually._**
+  **This tool will convert the above into proper PC `.bin`/`.binslot` files.**
 
-`convert_pc2vita.py` is a utility that converts P4G PC saves to P4G PS Vita saves by reversing the actions described above.
+  **_There's no need to edit any hashes manually._**
 
-**WARNING: REMEMBER TO BACKUP YOUR SAVES BEFORE USING THIS TOOL.**
+- `convert_pc2vita.py`, a utility that converts P4G PC saves to P4G PS Vita saves.
+
+**WARNING: REMEMBER TO BACKUP YOUR SAVES BEFORE CONVERSION.**
 
 | PS Vita                       | PC                        |
 | :---------------------------: | :-----------------------: |
