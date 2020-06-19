@@ -63,7 +63,7 @@ def conv_binslot( sdslot, offset, binslot_path ):
         contents = binslot.read( 0xC4 )
         contents = contents.replace( b"\nLANG1\nTimes ", b"\nTimes " )
         sdslot.write( contents )
-        sdslot.write( bytearray( [0] * 6 ) )
+        sdslot.seek( 0xC4 - len( contents ), 1 )
 
         sdslot.write( binslot.read( 0x34C - 2 * 0xC4 ) )
         sdslot.write( bytearray( [ 0 ] * ( 0x400 - 0x34C ) ) )
