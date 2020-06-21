@@ -44,7 +44,7 @@ For example, using VitaShell:
 
 The directory you exported to PC should look like the following, if all save slots were populated:
 
-```sh
+```txt
 PCSE00120/
 |- sce_sys/
 |  \- sdslot.dat
@@ -59,25 +59,49 @@ Note that the `sce_sys` directory contains other files, but they are not relevan
 
 #### Converting Saves to PC Format
 
-Clone this repository, then:
+1. Clone or download this repository.
+2. Convert your PS Vita saves using:
 
-```sh
-python convert_vita2pc.py <save_dir>
-```
+   ```sh
+   python convert_vita2pc.py <save_dir>
+   ```
 
-Copy the converted saves in `<save_dir>_conv` to `%PROGRAMFILES(X86)%/Steam/userdata/<user_id>/1113000/remote/` and launch the game.
+   This utility will generate:
+
+   - a `<save_dir>_conv` directory containing the converted saves
+   - a `remotecache.vdf` file
+
+3. Exit Steam - make sure Steam is not running in the background.
+
+4. Backup the contents of the `%PROGRAMFILES(X86)%/Steam/userdata/<user_id>/1113000/` dir.
+
+5. Copy the converted saves in `<save_dir>_conv` to `%PROGRAMFILES(X86)%/Steam/userdata/<user_id>/1113000/remote/`, overwriting files as necessary.
+
+   Copy the generated `remotecache.vdf` to `%PROGRAMFILES(X86)%/Steam/userdata/<user_id>/1113000/`, overwriting the original file if necessary.
+
+6. Start Steam and launch the game. In case of a Steam Cloud sync conflict, choose to upload local files to the cloud.
+
+7. Your imported saves should now appear in the LOAD GAME menu.
 
 ### PC Saves to PS Vita
 
 #### Converting Saves to PS Vita Format
 
-Copy the saves in `%PROGRAMFILES(X86)%/Steam/userdata/<user_id>/1113000/remote/` to another location as a precaution.
+1. Clone or download this repository.
 
-Then run the following on the directory you've copied:
+2. Copy the saves in `%PROGRAMFILES(X86)%/Steam/userdata/<user_id>/1113000/remote/` to another location as a precaution.
 
-```sh
-python convert_pc2vita.py <save_dir>
-```
+3. Run the following on the directory you've copied:
+
+   ```sh
+   python convert_pc2vita.py <save_dir>
+   ```
+
+   This utility will generate a `<save_dir>_conv` directory containing the converted saves.
+
+4. Move the converted saves to PS Vita (see [here](#moving-converted-saves-to-ps-vita)) and launch the game.
+
+5. Your imported saves should now appear in the LOAD GAME menu.
 
 #### Moving Converted Saves to PS Vita
 

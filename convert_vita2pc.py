@@ -1,11 +1,80 @@
 
 
+import os
+import math
 import shutil
 import struct
 import hashlib
 import argparse
 from pathlib import Path
 from functools import partial
+
+
+#region VDF
+
+
+def sha1sum( stream ):
+    sha1 = hashlib.sha1()
+
+    while True:
+        data = stream.read( 1024 )
+        if not data:
+            break
+        sha1.update(data)
+
+    return sha1
+
+
+def vdf_write( vdf, level, key = "", val = None ):
+    pad = '\t' * level
+    if key == None or key == "":
+        vdf.write( f'{pad}' + "}\n" )
+    elif val == None:
+        vdf.write( f'{pad}"{key}"\n{pad}' + "{\n" )
+    else:
+        vdf.write( f'{pad}"{key}"\t\t"{val}"\n' )
+
+
+def write_remcache_file( vdf, filepath ):
+    fstat = os.stat( filepath )
+    fsize = fstat.st_size
+    ftime = math.floor( fstat.st_mtime )
+
+    with open( filepath, "rb" ) as fs:
+        fsha = sha1sum( fs ).hexdigest()
+
+    vdf_write( vdf, 1, filepath.name )
+    vdf_write( vdf, 2, "root", 0 )
+    vdf_write( vdf, 2, "size", fsize )
+    vdf_write( vdf, 2, "localtime", ftime )
+    vdf_write( vdf, 2, "time", ftime )
+    vdf_write( vdf, 2, "remotetime", ftime )
+    vdf_write( vdf, 2, "sha", fsha )
+    vdf_write( vdf, 2, "syncstate", 4 )
+    vdf_write( vdf, 2, "persiststate", 0 )
+    vdf_write( vdf, 2, "platformstosync2", -1 )
+    vdf_write( vdf, 1 )
+
+
+def write_remcache( remcache_path, data_path ):
+    with open( remcache_path, "w", newline='\n' ) as vdf:
+        vdf_write( vdf, 0, "1113000" )
+
+        for f in data_path.glob( "system.bin" ):
+            write_remcache_file( vdf, Path ( f ) )
+            write_remcache_file( vdf, Path ( f"{f}slot" ) )
+
+        for f in data_path.glob( "data*.bin" ):
+            write_remcache_file( vdf, Path ( f ) )
+            write_remcache_file( vdf, Path ( f"{f}slot" ) )
+
+        vdf_write( vdf, 0 )
+
+
+#endregion
+
+
+#region BIN BINSLOT
 
 
 def md5sum( stream, start = 0 ):
@@ -140,6 +209,9 @@ def convert_sdslot( sdslot_path, dir_out ):
                     print( f"  generated {binslot_path}" )
 
 
+#endregion
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("save_dir", nargs=1, help="vita save dir")
@@ -164,6 +236,10 @@ def main():
     convert_data( save_path, dir_out )
     print( f"converting sdslot" )
     convert_sdslot( sdslot_path, dir_out )
+
+    print( "generating remotecache.vdf" ) 
+    remcache_path = Path ( dir_out.parent.joinpath( "remotecache.vdf" ) )
+    write_remcache( remcache_path, dir_out )
 
     print( "done!" )
 
