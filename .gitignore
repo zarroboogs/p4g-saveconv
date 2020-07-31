@@ -1,0 +1,12 @@
+# python
+.venv
+__pycache__
+build
+dist
+
+# vscode
+.vscode
+
+# misc
+_test
+_misc

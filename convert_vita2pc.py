@@ -1,95 +1,28 @@
 
 
-import os
-import math
 import shutil
 import struct
 import hashlib
 import argparse
 from pathlib import Path
-from functools import partial
+from remotecache import write_remcache
 
 
-#region VDF
-
-
-def sha1sum( stream ):
-    sha1 = hashlib.sha1()
+def md5sum( stream, start=0 ):
+    md5 = hashlib.md5()
+    stream.seek( start, 0 )
 
     while True:
         data = stream.read( 1024 )
         if not data:
             break
-        sha1.update(data)
+        md5.update( data )
 
-    return sha1
-
-
-def vdf_write( vdf, level, key = "", val = None ):
-    pad = '\t' * level
-    if key == None or key == "":
-        vdf.write( f'{pad}' + "}\n" )
-    elif val == None:
-        vdf.write( f'{pad}"{key}"\n{pad}' + "{\n" )
-    else:
-        vdf.write( f'{pad}"{key}"\t\t"{val}"\n' )
+    stream.seek( 0, 0 )
+    return md5
 
 
-def write_remcache_file( vdf, filepath ):
-    fstat = os.stat( filepath )
-    fsize = fstat.st_size
-    ftime = math.floor( fstat.st_mtime )
-
-    with open( filepath, "rb" ) as fs:
-        fsha = sha1sum( fs ).hexdigest()
-
-    vdf_write( vdf, 1, filepath.name )
-    vdf_write( vdf, 2, "root", 0 )
-    vdf_write( vdf, 2, "size", fsize )
-    vdf_write( vdf, 2, "localtime", ftime )
-    vdf_write( vdf, 2, "time", ftime )
-    vdf_write( vdf, 2, "remotetime", ftime )
-    vdf_write( vdf, 2, "sha", fsha )
-    vdf_write( vdf, 2, "syncstate", 4 )
-    vdf_write( vdf, 2, "persiststate", 0 )
-    vdf_write( vdf, 2, "platformstosync2", -1 )
-    vdf_write( vdf, 1 )
-
-
-def write_remcache( remcache_path, data_path ):
-    with open( remcache_path, "w", newline='\n' ) as vdf:
-        vdf_write( vdf, 0, "1113000" )
-
-        for f in data_path.glob( "system.bin" ):
-            write_remcache_file( vdf, Path ( f ) )
-            write_remcache_file( vdf, Path ( f"{f}slot" ) )
-
-        for f in data_path.glob( "data*.bin" ):
-            write_remcache_file( vdf, Path ( f ) )
-            write_remcache_file( vdf, Path ( f"{f}slot" ) )
-
-        vdf_write( vdf, 0 )
-
-
-#endregion
-
-
-#region BIN BINSLOT
-
-
-def md5sum( stream, start = 0 ):
-    curr = stream.tell()
-    stream.seek( start, 0 )
-
-    d = hashlib.md5()
-    for buf in iter( partial( stream.read, 0x80 ), b'' ):
-        d.update( buf )
-
-    stream.seek( curr, 0 )
-    return d
-
-
-def conv_bin( vita_bin, pc_bin ):
+def conv_bin( vita_bin, pc_bin, custom_diff=None ):
     # name data
     vita_bin.seek( 0x10, 0 )
     name_p = vita_bin.read( 0x24 ) # game encoding
@@ -98,8 +31,16 @@ def conv_bin( vita_bin, pc_bin ):
 
     vita_bin.seek( 0, 0 )
 
+    if custom_diff:
+        pc_bin.write( vita_bin.read( 0x1304 ) )
+        diff = struct.unpack( "<B", vita_bin.read( 1 ) )[ 0 ]
+        if custom_diff == "enable":
+            pc_bin.write( struct.pack( "<B", diff | 0x03 ) )
+        else:
+            pc_bin.write( struct.pack( "<B", diff & ~0x03 ) )
+
     # same as vita upto rescue requests
-    pc_bin.write( vita_bin.read( 0x15120 ) )
+    pc_bin.write( vita_bin.read( 0x15120 - vita_bin.tell() ) )
 
     # rescue requests segment new format
     pc_bin.write( struct.pack( "<2I", 0x0000000F, 0x00003FA4 ) ) # segment header
@@ -165,22 +106,22 @@ def conv_binslot( sdslot, offset, target_path, bin_path ):
         binslot.write( slot_md5sum.digest() )
 
 
-def convert_data( dir_in, dir_out, do_convert = True ):
+def convert_data( dir_in, dir_out, do_convert=True, custom_diff=None ):
     # system.bin has the same format
-    system_in = dir_in.joinpath( "system.bin" )
-    system_out = dir_out.joinpath( "system.bin" )
+    system_in = dir_in / "system.bin"
+    system_out = dir_out / "system.bin"
 
     if system_in.exists():
         shutil.copy( system_in, system_out )
         print( "  copied system.bin" )
 
     # convert saves first
-    for vita_path in dir_in.glob('data*.bin'):
-        pc_path = dir_out.joinpath( vita_path.name )
+    for vita_path in dir_in.glob( 'data*.bin' ):
+        pc_path = dir_out / vita_path.name
 
         if do_convert:
             with open( vita_path, "rb" ) as vita_bin, open( pc_path, "w+b" ) as pc_bin:
-                conv_bin( vita_bin, pc_bin )
+                conv_bin( vita_bin, pc_bin, custom_diff )
             print( f"  converted {vita_path}" )
         else:
             shutil.copy( vita_path, pc_path )
@@ -188,12 +129,12 @@ def convert_data( dir_in, dir_out, do_convert = True ):
 
 
 def convert_sdslot( sdslot_path, dir_out ):
-    with open( sdslot_path, "rb") as sdslot:
+    with open( sdslot_path, "rb" ) as sdslot:
         sdslot.seek( 0x200 )
         active_slots = struct.unpack( "<17B", sdslot.read( 17 ) )
 
         # system.binslot
-        bin_path = dir_out.joinpath( "system.bin" )
+        bin_path = dir_out / "system.bin"
         binslot_path = f"{bin_path}slot"
         if bin_path.exists():
             conv_binslot( sdslot, 0x400, binslot_path, bin_path )
@@ -202,43 +143,45 @@ def convert_sdslot( sdslot_path, dir_out ):
         # dataXXXX.binslot
         for i in range( 1, 17 ):
             if active_slots[ i ]:
-                bin_path = dir_out.joinpath( f"data00{i:02}.bin" )
+                bin_path = dir_out / f"data00{i:02}.bin"
                 binslot_path = f"{bin_path}slot"
                 if bin_path.exists():
                     conv_binslot( sdslot, 0x400 + i * 0x400, binslot_path, bin_path )
                     print( f"  generated {binslot_path}" )
 
 
-#endregion
-
-
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("save_dir", nargs=1, help="vita save dir")
+    parser.add_argument( "--custom-diff", choices={ "enable", "disable" }, help="toggle custom diff menu" )
+    parser.add_argument( "save_dir", nargs=1, help="vita save dir" )
     args = parser.parse_args()
 
     save_path = Path( args.save_dir[0] )
-    sdslot_path = save_path.joinpath( "sce_sys/sdslot.dat" )
+    sdslot_path = save_path / "sce_sys/sdslot.dat"
 
     if not save_path.is_dir():
         raise Exception( "missing save dir or save dir doesn't exist" )
-    print( f"converting save dir {save_path}")
+    print( f"converting save dir {save_path}" )
 
     if not sdslot_path.exists():
         raise Exception( f"{sdslot_path} not found" )
     print( f"using {sdslot_path} from save dir" )
+
+    files = [ f for f in save_path.glob( "data*.binslot" ) if f.is_file() ]
+    if len( files ) != 0:
+        raise Exception( "input dir already contain pc saves" )
 
     dir_out = Path( f"{save_path}_conv" )
     dir_out.mkdir( exist_ok=True )
     print( f"using output dir {dir_out}" )
 
     print( f"converting saves" )
-    convert_data( save_path, dir_out )
+    convert_data( save_path, dir_out, custom_diff=args.custom_diff )
     print( f"converting sdslot" )
     convert_sdslot( sdslot_path, dir_out )
 
-    print( "generating remotecache.vdf" ) 
-    remcache_path = Path ( dir_out.parent.joinpath( "remotecache.vdf" ) )
+    print( "generating remotecache.vdf" )
+    remcache_path = Path ( dir_out.parent / "remotecache.vdf" )
     write_remcache( remcache_path, dir_out )
 
     print( "done!" )
