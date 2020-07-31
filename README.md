@@ -64,6 +64,7 @@ Note that the `sce_sys` directory contains other files, but they are not relevan
 #### Converting Saves to PC Format
 
 1. Clone or download this repository.
+
 2. Convert your PS Vita saves using:
 
    ```sh
@@ -167,12 +168,14 @@ Config settings are no longer saved in `system.bin`, instead there's a config `P
 ### `.bin` Files
 
 - The *Rescue Requests* save segment increased in size (due to internal struct changes), from `0x2908` bytes (PS Vita) to `0x3FAC` bytes (PC).
-- PC saves contain a new save segment (`0x30` bytes) that contains the Hero's name.
+- PC saves contain a new save segment  (`0x30` bytes) which stores the Hero's name.
 - PS Vita saves are padded to `0x38000` bytes with garbage data from PS Vita memory. PC saves aren't padded (`0x34D3D` bytes).
 
 ### `.binslot` Files
 
 BINslot files are the PC alternative to `sdslot.dat`.
+
+Stored metadata is identical to PS Vita apart from a new `LANG%d` parameter.
 
 BINslot file structure:
 
